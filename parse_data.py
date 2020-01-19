@@ -126,7 +126,7 @@ ch_ind =indexes_to_include[:-1]
 
 
 
-temp_path = "/Users/shiran.s/dev/p300_net_old/output/temp_csv.csv"
+temp_path = "/Users/shiran.s/dev/p300_net/output/temp_csv.csv"
 df.to_csv(path_or_buf=temp_path, index=False)
 conditions = OrderedDict()
 conditions['Non-target'] = [1]
