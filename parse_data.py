@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import warnings
 
-from copy_helpers import load_muse_csv_as_raw, plot_conditions
+from copy_helpers import load_muse_csv_as_raw__copy, plot_conditions
 
 from scipy.io import loadmat
 
@@ -38,7 +38,7 @@ def load_orig():
     # load orig file
     f_p300 = "/Users/shiran.s/dev/eeg-notebooks/data/visual/P300/subject1/session1/data_2017-02-04-15_45_13.csv"
     p300 = pd.read_csv(f_p300)
-    raw_orig = load_muse_csv_as_raw([f_p300], 256)
+    raw_orig = load_muse_csv_as_raw__copy([f_p300], 256)
     #
     conditions = OrderedDict()
     conditions['Non-target'] = [1]
@@ -49,7 +49,7 @@ def load_orig():
 
 
 
-x = loadmat('/Users/shiran.s/dev/p300_net_old/data/IIb/AAS010R02.mat')
+x = loadmat('/Users/shiran.s/dev/p300_net/data/IIb/AAS010R02.mat')
 
 for k in x.keys():
     if isinstance(x[k], bytes) or isinstance(x[k], str) or isinstance(x[k], list):
@@ -133,7 +133,7 @@ conditions['Non-target'] = [1]
 conditions['Target'] = [2]
 event_ids = {'Non-Target': 1, 'Target': 2}
 
-raw = load_muse_csv_as_raw([temp_path], sfreq=240, stim_ind=-1, replace_ch_names=replace_ch_names, ch_ind=ch_ind)
+raw = load_muse_csv_as_raw__copy([temp_path], sfreq=240, stim_ind=-1, replace_ch_names=replace_ch_names, ch_ind=ch_ind)
 plot_p300(raw, conditions, event_ids, picks=ch_ind,reject={'eeg': 100e-4}, ylim=(-100, 100))
 
 # kaggle comp
