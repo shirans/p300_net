@@ -1,0 +1,3 @@
+n_epochs: 2000
+data_dir: '/Users/shiran.s/dev/p300_net/data/IIb/'
+# data_dir = '/Users/shiran.s/dev/p300_net/data/IIb/AAS010R02.mat'
