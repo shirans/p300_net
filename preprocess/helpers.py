@@ -1,5 +1,4 @@
 import torch
-import json
 
 from nets.two_layers_net import TwoLayersNet
 

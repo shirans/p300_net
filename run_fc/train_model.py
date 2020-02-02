@@ -1,8 +1,10 @@
 import torch
-from pylsl.examples.ReceiveAndPlot import plt
+import numpy as np
+import matplotlib.pyplot as plt
 
 
 def train_model(model, n_epochs, train_loader,valid_loader, device, optimizer, criterion):
+    valid_loss_min = np.Inf
     tLoss, vLoss = [], []
 
     for epoch in range(n_epochs):
@@ -68,7 +70,7 @@ def train_model(model, n_epochs, train_loader,valid_loader, device, optimizer, c
             print('Validation loss decreased ({:.6f} --> {:.6f}).  Saving model ...'.format(
                 valid_loss_min,
                 valid_loss))
-            torch.save(model.state_dict(), 'model_cifar.pt')
+            torch.save(model.state_dict(), 'model_cifar_new_2.pt')
             valid_loss_min = valid_loss
 
         # Plot the resulting loss over time

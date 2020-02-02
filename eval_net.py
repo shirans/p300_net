@@ -1,27 +1,28 @@
 import torch
-
-from copy_helpers import load_data
+import torch.nn as nn
+import numpy as np
+from copy_helpers import load_data, load_muse_csv_as_raw__copy
 from nets.two_layers_net import TwoLayersNet
-from preprocess.helpers import load_conf
+from preprocess import preprocess
+from preprocess.helpers import load_conf, get_device
 
 model = TwoLayersNet().double()
-model = model.load_state_dict(torch.load('model_cifar.pt'))
+model.load_state_dict(torch.load('model_cifar_new_2.pt'))
 model.eval()
 
-
 data_dir, n_epochs = load_conf()
-train_loader, valid_loader = load_data(data_dir)
-
+device = get_device()
+# raws = load_muse_csv_as_raw__copy(filename=[data_dir], replace_ch_names={'1': 'tp9'})
+train_loader, valid_loader = preprocess.load_data(data_dir)
 
 NUM_CLASSES = 3
-
 
 # track test loss
 test_loss = 0.0
 class_correct = [0] * NUM_CLASSES
 class_total = [0] * NUM_CLASSES
 
-
+criterion = nn.CrossEntropyLoss()
 # For generating confusion matrix
 
 # iterate over test data
