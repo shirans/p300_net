@@ -12,13 +12,12 @@ import numpy as np
 import seaborn as sns
 from matplotlib import pyplot as plt
 
-
 sns.set_context('talk')
 sns.set_style('white')
 
 
 def load_muse_csv_as_raw__copy(filename, sfreq=256., ch_ind=[0, 1, 2, 3],
-                               stim_ind=5, replace_ch_names=None):
+                               stim_ind=-1, replace_ch_names=None):
     """Load CSV files into a Raw object.
 
     Args:
@@ -38,6 +37,7 @@ def load_muse_csv_as_raw__copy(filename, sfreq=256., ch_ind=[0, 1, 2, 3],
     Returns:
         (mne.io.array.array.RawArray): loaded EEG
     """
+
     n_channel = len(ch_ind)
 
     raw = []
@@ -46,7 +46,7 @@ def load_muse_csv_as_raw__copy(filename, sfreq=256., ch_ind=[0, 1, 2, 3],
         data = pd.read_csv(fname, index_col=0)
 
         # name of each channels
-        ch_names = list(data.columns)[0:n_channel] + ['Stim']
+        ch_names = list(replace_ch_names.keys())+ ['Stim']
 
         if replace_ch_names is not None:
             ch_names = [c if c not in replace_ch_names.keys()
@@ -54,7 +54,7 @@ def load_muse_csv_as_raw__copy(filename, sfreq=256., ch_ind=[0, 1, 2, 3],
 
         # type of each channels
         ch_types = ['eeg'] * n_channel + ['stim']
-        montage = read_montage('standard_1005')
+        montage = read_montage('standard_1005', ch_names=ch_names)
 
         # get data and exclude Aux channel
         data = data.values[:, ch_ind + [stim_ind]].T
@@ -104,8 +104,8 @@ def load_data(data_dir, subject_nb=1, session_nb=1, sfreq=256.,
         session_nb = '*'
 
     data_path = os.path.join(
-            '../data', data_dir,
-            'subject{}/session{}/*.csv'.format(subject_nb, session_nb))
+        '../data', data_dir,
+        'subject{}/session{}/*.csv'.format(subject_nb, session_nb))
     fnames = glob(data_path)
 
     return load_muse_csv_as_raw__copy(fnames, sfreq=sfreq, ch_ind=ch_ind,
@@ -150,9 +150,8 @@ def plot_conditions(epochs, conditions=OrderedDict(), ci=97.5, n_boot=1000,
 
     X = epochs.get_data() * 1e6
     times = epochs.times
-    print("times shape:",times.shape)
+    print("times shape:", times.shape)
     y = pd.Series(epochs.events[:, -1])
-
 
     fig, axes = plt.subplots(2, 2, figsize=[12, 6],
                              sharex=True, sharey=True)
@@ -244,7 +243,7 @@ def plot_highlight_regions(x, y, hue, hue_thresh=0, xlabel='', ylabel='',
 
     st = (x[1] - x[0]) / 2.0
     for p in a:
-        axes.axvspan(x[p[0]]-st, x[p[1]]+st, facecolor='g', alpha=0.5)
+        axes.axvspan(x[p[0]] - st, x[p[1]] + st, facecolor='g', alpha=0.5)
     plt.legend(legend_str)
     sns.despine()
 
