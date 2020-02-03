@@ -32,20 +32,24 @@ def label_marker(row):
 
 
 def load_files(data_dir):
+
     if os.path.isfile(data_dir):
         logger.info("loading a single file from path: {}".format(data_dir))
         return data_dict_to_df(loadmat(data_dir))
     num_files = len(os.listdir(data_dir))
     logger.info("loading {} files from path: {}".format(num_files, data_dir))
     dfs = []
+    num_valid_files = 0
     for file in os.listdir(data_dir):
         if fnmatch.fnmatch(file, 'A*'):
             mat = loadmat(data_dir + file)
             try:
                 dfs.append(data_dict_to_df(mat))
                 logger.info("added file: {}".format(file))
+                num_valid_files = num_valid_files+1
             except Exception as e:
                 logger.info("failed with file {} with error: {}".format(file, str(e)))
+    logger.info("used {} files as input".format(num_files))
     return pd.concat(dfs)
 
 

@@ -6,7 +6,7 @@ import torch.nn as nn
 NUM_CLASSES = 3
 
 
-def evaluate(loader, device, model):
+def evaluate(loader, device, model, type):
     # track test loss
     test_loss = 0.0
     class_correct = [0] * NUM_CLASSES
@@ -40,15 +40,16 @@ def evaluate(loader, device, model):
 
     # average test loss
     test_loss = test_loss / len(loader.dataset)
-    print('Test Loss: {:.6f}\n'.format(test_loss))
+    print("data for {}".format(type))
+    print('Loss: {:.6f}\n'.format(test_loss))
 
     for i in range(NUM_CLASSES):
         if class_total[i] > 0:
-            print('Test Accuracy of %3s: %2d%% (%2d/%2d)' % (
+            print('Accuracy of %3s: %2d%% (%2d/%2d)' % (
                 i, 100 * class_correct[i] / class_total[i],
                 np.sum(class_correct[i]), np.sum(class_total[i])))
         else:
-            print('Test Accuracy of %3s: N/A (no training examples)' % (class_total[i]))
+            print('Accuracy of %3s: N/A (no training examples)' % (class_total[i]))
 
     print('\nTest Accuracy (Overall): %2d%% (%2d/%2d)' % (
         100. * np.sum(class_correct) / np.sum(class_total),
