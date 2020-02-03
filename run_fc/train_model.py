@@ -70,7 +70,7 @@ def train_model(model, n_epochs, train_loader,valid_loader, device, optimizer, c
             print('Validation loss decreased ({:.6f} --> {:.6f}).  Saving model ...'.format(
                 valid_loss_min,
                 valid_loss))
-            torch.save(model.state_dict(), 'model_cifar_new_2.pt')
+            torch.save(model.state_dict(), 'model_cifar_new_4.pt')
             valid_loss_min = valid_loss
 
         # Plot the resulting loss over time

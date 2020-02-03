@@ -1,4 +1,4 @@
 #n_epochs: 2000
 #data_dir: '/Users/shiran.s/dev/p300_net/output/processed_data/processed_data.csv'
-model_dir: "/Users/shiran.s/dev/p300_net/model_cifar_new_2.pt"
+model_dir: "/Users/shiran.s/dev/p300_net/model_cifar_new_4.pt"
 data_dir: '/Users/shiran.s/dev/p300_net/data/IIb/'
