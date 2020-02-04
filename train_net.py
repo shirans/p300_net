@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 
 import numpy as np
-from nets.two_layers_net import TwoLayersNet
 from preprocess.helpers import get_device, load_conf, getModel
 from preprocess.preprocess import load_data
 import torch.optim as optim
@@ -12,8 +11,6 @@ from run_fc.train_model import train_model
 
 # parameters
 data_dir, n_epochs = load_conf()
-
-print(f'Using PyTorch v{torch.__version__}')
 
 # load the data
 train_loader, valid_loader = load_data(data_dir)

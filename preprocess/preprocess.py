@@ -41,7 +41,7 @@ def load_files(data_dir):
     dfs = []
     num_valid_files = 0
     for file in os.listdir(data_dir):
-        if fnmatch.fnmatch(file, 'A*'):
+        if fnmatch.fnmatch(file, 'AAS010*') or fnmatch.fnmatch(file, 'AAS011*'):
             mat = loadmat(data_dir + file)
             try:
                 dfs.append(data_dict_to_df(mat))
