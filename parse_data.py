@@ -120,7 +120,6 @@ df = df[indexes_to_include + ['Marker']]
 replace_ch_names= None
 
 # use all 64 chammels
-replace_ch_names = {'1': "TP9"}
 print(df.head(10))
 ch_ind =indexes_to_include[:-1]
 

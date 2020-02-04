@@ -13,6 +13,8 @@ from scipy.io import loadmat
 from copy_helpers import load_muse_csv_as_raw__copy
 import logging
 
+from preprocess.helpers import replace_ch_names
+
 logging.basicConfig(level=logging.DEBUG)
 logging.getLogger().setLevel(logging.INFO)
 
@@ -31,8 +33,7 @@ def label_marker(row):
     return 1  # non target
 
 
-def load_files(data_dir):
-
+def files_to_df(data_dir):
     if os.path.isfile(data_dir):
         logger.info("loading a single file from path: {}".format(data_dir))
         return data_dict_to_df(loadmat(data_dir))
@@ -46,7 +47,7 @@ def load_files(data_dir):
             try:
                 dfs.append(data_dict_to_df(mat))
                 logger.info("added file: {}".format(file))
-                num_valid_files = num_valid_files+1
+                num_valid_files = num_valid_files + 1
             except Exception as e:
                 logger.info("failed with file {} with error: {}".format(file, str(e)))
     logger.info("used {} files as input".format(num_files))
@@ -69,28 +70,23 @@ def data_dict_to_df(x):
     return df
 
 
-def load_data(input_path):
-    # TODO: split to train, validate, test
-    df = load_files(input_path)
+def choose_columns_save_csv(input_path, channels_to_include, output_path):
+    df = files_to_df(input_path)
 
-    df = df.astype(float)
-    df['Marker'] = df.apply(lambda row: label_marker(row), axis=1)
+    df = add_marker_choose_columns(channels_to_include, df)
+    logger.info("saving data to path:{}".format(output_path))
+    df.to_csv(path_or_buf=output_path, index=False)
 
-    indexes_to_include = list(range(0, 7))
-    df = df[indexes_to_include + ['Marker']]
-    replace_ch_names = None
 
-    # use all 64 chammels
-    replace_ch_names = {'1': "TP9"}
-    ch_ind = indexes_to_include[:-1]
-
-    temp_path = "/Users/shiran.s/dev/p300_net/output/temp_csv.csv"
-    df.to_csv(path_or_buf=temp_path, index=False)
+def data_to_raw(path):
+    num_columns_in_file = len(pd.read_csv(path).columns)
     conditions = OrderedDict()
     conditions['Non-target'] = [1]
     conditions['Target'] = [2]
 
-    raw = load_muse_csv_as_raw__copy([temp_path], sfreq=240, stim_ind=-1, replace_ch_names=replace_ch_names,
+    # all columns are eeg except the last one which is the marker
+    ch_ind = list(range(0,num_columns_in_file))[:-1]
+    raw = load_muse_csv_as_raw__copy([path], sfreq=240, stim_ind=-1, replace_ch_names=replace_ch_names,
                                      ch_ind=ch_ind)
 
     raw.filter(1, 30, method='iir')
@@ -162,3 +158,10 @@ def load_data(input_path):
     print(labels.shape)
 
     return train_loader, valid_loader
+
+
+def add_marker_choose_columns(channels_to_include, df):
+    df = df.astype(float)
+    df['Marker'] = df.apply(lambda row: label_marker(row), axis=1)
+    df = df[channels_to_include + ['Marker']]
+    return df

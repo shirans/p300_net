@@ -1,38 +1,10 @@
-import torch
-import json
-
-from nets.two_layers_net import TwoLayersNet
-
-
-def get_device():
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(device)
-    return device
-
-
-def load_conf():
-    import yaml
-
-    with open('conf.yaml', 'r', newline='') as f:
-        conf = yaml.load(f)
-        return \
-            conf['data_dir'], \
-            conf['n_epochs']
-
-
-def getModel(device):
-    model = TwoLayersNet().double()
-    model.to(device)
-    return model
-
-
-# new code
 from collections import OrderedDict
+from nets.two_layers_net import TwoLayersNet
 
 import torch
 import yaml
 
-from nets.two_layers_net import TwoLayersNet
+replace_ch_names = {'1': "TP9"}
 
 _reject = {'eeg': 100e-4}
 
@@ -58,6 +30,12 @@ _conditions['Target'] = [2]
 _event_ids = {'Non-Target': 1, 'Target': 2}
 
 
+def getModel(device):
+    model = TwoLayersNet().double()
+    model.to(device)
+    return model
+
+
 def get_device():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(device)
@@ -65,7 +43,7 @@ def get_device():
 
 
 def load_conf_preprocess():
-    with open('conf_prepross.yaml', 'r', newline='') as f:
+    with open('conf_preprocess.yaml', 'r', newline='') as f:
         conf = yaml.load(f)
         return \
             conf['data_input'], \
@@ -76,7 +54,7 @@ def load_conf_train():
     with open('conf_train.yaml', 'r', newline='') as f:
         conf = yaml.load(f)
         return \
-            conf['input_path'], \
+            conf['data_dir'], \
             conf['n_epochs'], \
             conf['model_name']
 

@@ -1,0 +1,3 @@
+n_epochs: 2000
+model_name: "model_cifar_new_7.pt"
+data_dir: '/Users/shiran.s/dev/p300_net/output/processed_data/processed_data_latest.csv'
