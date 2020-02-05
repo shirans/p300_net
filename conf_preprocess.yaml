@@ -1,3 +1,3 @@
 data_input: '/Users/shiran.s/dev/p300_net/data/IIb/'
-data_output: '/Users/shiran.s/dev/p300_net/output/processed_data/processed_data_latest.csv'
+data_output: '/Users/shiran.s/dev/p300_net/output/processed_data/processed_data_latest/'
 #data_dir: '/Users/shiran.s/dev/p300_net/output/processed_data/processed_data.csv'
