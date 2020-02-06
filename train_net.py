@@ -5,6 +5,7 @@ from preprocess.helpers import get_device, getModel, load_conf_train
 import torch.optim as optim
 
 from preprocess.preprocess import data_to_raw
+from run_fc.eval_model import evaluate
 from run_fc.train_model import train_model
 
 # parameters
@@ -28,3 +29,7 @@ valid_loss_min = np.Inf  # track change in validation loss
 
 train_model(model=model, n_epochs=n_epochs, train_loader=train_loader, valid_loader=valid_loader, device=device,
             optimizer=optimizer, criterion=criterion, model_name=model_name)
+
+evaluate(train_loader,device,model,'train')
+evaluate(valid_loader,device,model,'valid')
+print("Done!")

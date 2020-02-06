@@ -1,10 +1,7 @@
 import fnmatch
-import sys
-import traceback
 import torch
-from collections import OrderedDict
 import os
-from mne import Epochs, find_events
+from mne import find_events
 import mne
 import numpy as np
 import pandas as pd
@@ -15,7 +12,7 @@ from scipy.io import loadmat
 from copy_helpers import load_muse_csv_as_raw__copy
 import logging
 
-from preprocess.helpers import replace_ch_names
+from preprocess.helpers import replace_ch_names, _reject, _event_ids
 
 logging.basicConfig(level=logging.DEBUG)
 logging.getLogger().setLevel(logging.INFO)
@@ -35,19 +32,21 @@ def label_marker(row):
     return 1  # non target
 
 
-def files_to_df(data_dir):
+def files_to_df(data_dir, indexes):
     if os.path.isfile(data_dir):
         logger.info("loading a single file from path: {}".format(data_dir))
-        return data_dict_to_df(loadmat(data_dir))
+        matrix = loadmat(data_dir)
+        return data_dict_to_df(matrix, indexes)
     num_files = len(os.listdir(data_dir))
     logger.info("loading {} files from path: {}".format(num_files, data_dir))
     dfs = []
     num_valid_files = 0
     for file in os.listdir(data_dir):
         if fnmatch.fnmatch(file, 'AAS010*') or fnmatch.fnmatch(file, 'AAS011*'):
-            mat = loadmat(os.path.join(data_dir, file))
+            matrix = loadmat(os.path.join(data_dir, file))
             try:
-                dfs.append(data_dict_to_df(mat))
+                df = data_dict_to_df(matrix, indexes)
+                dfs.append(df)
                 logger.info("added file: {}".format(file))
                 num_valid_files = num_valid_files + 1
             except Exception as e:
@@ -55,7 +54,7 @@ def files_to_df(data_dir):
     return dfs
 
 
-def data_dict_to_df(x):
+def data_dict_to_df(x, indexes):
     samplenr = x['samplenr'][:, 0]
     signal = x['signal']
     StimulusType = x['StimulusType']
@@ -63,23 +62,26 @@ def data_dict_to_df(x):
     trialnr = x['trialnr']
 
     # choose spcific columns
-    z_based = [42, 24, 29, 44, 45]
-    signal = signal[:, z_based]
+    # z_based = [42, 24, 29, 44, 45]
+    signal = signal[:, indexes]
 
     sig = np.column_stack((samplenr, signal, StimulusCode, StimulusType, trialnr))
+    #y = ['samplenr'] + indexes + ['StimulusCode', 'StimulusType', 'trialnr']
+    # y = ['samplenr'] + ['sig_' + str(a) for a in range(1, 65)] + ['StimulusCode', 'StimulusType', 'trialnr']
     df = pd.DataFrame(sig)
+    #df.columns = y
     return df
 
 
-def choose_columns_save_csv(input_path, channels_to_include, output_path):
-    unite_files_and_save('train', input_path, channels_to_include, output_path)
-    unite_files_and_save('valid', input_path, channels_to_include, output_path)
-    unite_files_and_save('test', input_path, channels_to_include, output_path)
+def choose_columns_save_csv(input_path, channels_to_include, output_path, indexes):
+    unite_files_and_save('train', input_path, channels_to_include, output_path, indexes)
+    unite_files_and_save('valid', input_path, channels_to_include, output_path, indexes)
+    unite_files_and_save('test', input_path, channels_to_include, output_path, indexes)
 
 
-def unite_files_and_save(type, path, channels_to_include, output_path):
+def unite_files_and_save(type, path, channels_to_include, output_path, indexes):
     full_input_path = os.path.join(path, type)
-    dfs = files_to_df(full_input_path)
+    dfs = files_to_df(full_input_path, indexes)
     logger.info("used {} files for {}".format(len(dfs), type))
     df = pd.concat(dfs)
     df = add_marker_choose_columns(channels_to_include, df)
@@ -93,9 +95,6 @@ def load_folder(type, path):
     full_path = os.path.join(path, type + '.csv')
     num_columns_in_file = len(pd.read_csv(full_path).columns)
 
-    conditions = OrderedDict()
-    conditions['Non-target'] = [1]
-    conditions['Target'] = [2]
     # all columns are eeg except the last one which is the marker
     ch_ind = list(range(0, num_columns_in_file))[:-1]
     raw = load_muse_csv_as_raw__copy([full_path], sfreq=240, stim_ind=-1, replace_ch_names=replace_ch_names,
@@ -103,12 +102,10 @@ def load_folder(type, path):
 
     raw.filter(1, 30, method='iir')
     events = find_events(raw)
-    reject = {'eeg': 100e-4}
-    event_ids = {'Non-Target': 1, 'Target': 2}
 
-    epochs = mne.Epochs(raw, events=events, event_id=event_ids,
+    epochs = mne.Epochs(raw, events=events, event_id=_event_ids,
                         tmin=-0.1, tmax=0.8, baseline=None,
-                        reject=reject, preload=True,
+                        reject=_reject, preload=True,
                         verbose=False, picks=ch_ind)
     print('sample drop %: ', (1 - len(epochs.events) / len(events)) * 100)
     labels = epochs.events[:, -1]

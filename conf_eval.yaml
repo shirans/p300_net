@@ -1,5 +1,5 @@
 #n_epochs: 2000
 #model_dir: "/Users/shiran.s/dev/p300_net/model_cifar_new_6.pt"
 #data_dir: '/Users/shiran.s/dev/p300_net/data/IIb/'
-model_dir: "/Users/shiran.s/dev/p300_net/output/models/model_cifar_new_9.pt/model.pt"
-data_dir: '/Users/shiran.s/dev/p300_net/output/processed_data/processed_data_latest/'
+model_dir: "/Users/shiran.s/dev/p300_net/output/models/model_cifar_new_10.pt/model.pt"
+data_dir: '/Users/shiran.s/dev/p300_net/output/processed_data/processed_data_latest_2/'

@@ -48,6 +48,8 @@ def load_muse_csv_as_raw__copy(filename, sfreq=256., ch_ind=[0, 1, 2, 3],
         # name of each channels
         ch_names = list(data.columns)[0:n_channel] + ['Stim']
 
+        replace_ch_names = {ch_names[0]: "TP9"}
+
         if replace_ch_names is not None:
             ch_names = [c if c not in replace_ch_names.keys()
                         else replace_ch_names[c] for c in ch_names]
@@ -63,6 +65,7 @@ def load_muse_csv_as_raw__copy(filename, sfreq=256., ch_ind=[0, 1, 2, 3],
         print("data before conersion")
 
         data[:-1] *= 1e-6
+
 
         # create MNE object
         info = create_info(ch_names=ch_names, ch_types=ch_types,
