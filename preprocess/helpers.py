@@ -43,7 +43,7 @@ def get_device():
 
 
 def load_conf_preprocess():
-    with open('conf_preprocess.yaml', 'r', newline='') as f:
+    with open('config/conf_preprocess.yaml', 'r', newline='') as f:
         conf = yaml.load(f)
         return \
             conf['data_input'], \
@@ -51,7 +51,7 @@ def load_conf_preprocess():
 
 
 def load_conf_train():
-    with open('conf_train.yaml', 'r', newline='') as f:
+    with open('config/conf_train.yaml', 'r', newline='') as f:
         conf = yaml.load(f)
         return \
             conf['data_dir'], \
@@ -60,7 +60,7 @@ def load_conf_train():
 
 
 def load_conf_eval():
-    with open('conf_eval.yaml', 'r', newline='') as f:
+    with open('config/conf_eval.yaml', 'r', newline='') as f:
         conf = yaml.load(f)
         return \
             conf['data_dir'], \
