@@ -24,6 +24,14 @@ logger = logging.getLogger(__name__)
 # Digitized to 240Mz, we want 600 MS to identify P300 at the half of it so 250 samples are 600 MS
 
 
+# def label_marker(row):
+#     if row[6] == 0:
+#         return 0  # no event
+#     if row[6] > 0 and row[7] == 1:
+#         return 2  # target
+#     return 1  # non target
+
+
 def label_marker(row):
     if row[6] == 0:
         return 0  # no event
@@ -66,27 +74,28 @@ def data_dict_to_df(x, indexes):
     signal = signal[:, indexes]
 
     sig = np.column_stack((samplenr, signal, StimulusCode, StimulusType, trialnr))
-    #y = ['samplenr'] + indexes + ['StimulusCode', 'StimulusType', 'trialnr']
-    # y = ['samplenr'] + ['sig_' + str(a) for a in range(1, 65)] + ['StimulusCode', 'StimulusType', 'trialnr']
+    y = ['samplenr'] + indexes + ['StimulusCode', 'StimulusType', 'trialnr']
     df = pd.DataFrame(sig)
-    #df.columns = y
+    df.columns = y
     return df
 
 
-def choose_columns_save_csv(input_path, channels_to_include, output_path, indexes):
-    unite_files_and_save('train', input_path, channels_to_include, output_path, indexes)
-    unite_files_and_save('valid', input_path, channels_to_include, output_path, indexes)
-    unite_files_and_save('test', input_path, channels_to_include, output_path, indexes)
+def choose_columns_save_csv(input_path, output_path, indexes):
+    logger.info("loading data from path: {}".format(input_path))
+    unite_files_and_save('train', input_path, output_path, indexes)
+    unite_files_and_save('valid', input_path, output_path, indexes)
+    unite_files_and_save('test', input_path, output_path, indexes)
 
 
-def unite_files_and_save(type, path, channels_to_include, output_path, indexes):
+def unite_files_and_save(type, path, output_path, indexes):
     full_input_path = os.path.join(path, type)
     dfs = files_to_df(full_input_path, indexes)
     logger.info("used {} files for {}".format(len(dfs), type))
     df = pd.concat(dfs)
-    df = add_marker_choose_columns(channels_to_include, df)
+    df = add_marker_choose_columns(indexes, df)
     Path(output_path).mkdir(parents=True, exist_ok=True)
     full_output_path = os.path.join(output_path, type + '.csv')
+    print("output columns: {}".format(df.columns))
     logger.info("saving {} data to path:{}".format(type, full_output_path))
     df.to_csv(path_or_buf=full_output_path, index=False)
 
@@ -152,5 +161,5 @@ def data_to_raw(path):
 def add_marker_choose_columns(channels_to_include, df):
     df = df.astype(float)
     df['Marker'] = df.apply(lambda row: label_marker(row), axis=1)
-    df = df[channels_to_include + ['Marker']]
+    df = df[['samplenr'] + channels_to_include + ['Marker']]
     return df
