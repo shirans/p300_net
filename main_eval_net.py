@@ -1,11 +1,11 @@
 import torch
 
 from preprocess.helpers import load_conf_eval, get_device, build_model
-from preprocess.preprocess import data_to_raw
+from preprocess.preprocess import build_dataloader
 from run_fc.eval_model import evaluate
 
 data_dir, model_dir = load_conf_eval()
-train_loader, valid_loader = data_to_raw(data_dir)
+train_loader, valid_loader = build_dataloader(data_dir)
 
 device = get_device()
 model = build_model(device)

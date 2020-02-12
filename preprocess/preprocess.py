@@ -6,6 +6,8 @@ import mne
 import numpy as np
 import pandas as pd
 from pathlib import Path
+
+from torch.utils.data import Dataset
 from torch.utils.data.sampler import SubsetRandomSampler
 
 from scipy.io import loadmat
@@ -33,9 +35,9 @@ logger = logging.getLogger(__name__)
 
 
 def label_marker(row):
-    if row[6] == 0:
+    if row['StimulusCode'] == 0:
         return 0  # no event
-    if row[6] > 0 and row[7] == 1:
+    if row['StimulusCode'] != 0 and row['StimulusType'] == 1:
         return 2  # target
     return 1  # non target
 
@@ -138,13 +140,13 @@ def load_folder(type, path):
     batch_size = 64  # how many samples per batch to load
     num_workers = 0
 
+    # loader = P300_IIB(train_data)
     loader = torch.utils.data.DataLoader(train_data, batch_size=batch_size,
                                          sampler=sampler, num_workers=num_workers)
 
     return loader
 
-
-def data_to_raw(path):
+def build_dataloader(path):
     logger.info("loading data from path: {}".format(path))
     train_loader = load_folder('train', path)
     valid_loader = load_folder('valid', path)
@@ -158,8 +160,38 @@ def data_to_raw(path):
     return train_loader, valid_loader
 
 
+def train_shapes(loader):
+    data, labels = iter(loader).next()
+    print("data shape: {}".format(data.shape))
+    print("labels shape:{}".format(labels.shape))
+
+
 def add_marker_choose_columns(channels_to_include, df):
     df = df.astype(float)
     df['Marker'] = df.apply(lambda row: label_marker(row), axis=1)
     df = df[['samplenr'] + channels_to_include + ['Marker']]
     return df
+
+
+
+class P300_IIB(Dataset):
+    """
+    A customized data loader for MNIST.
+    """
+
+    def __init__(self,
+                 data):
+        self.data = data
+        self.len = len(data)
+
+    # probably the most important to customize.
+    def __getitem__(self, index):
+        """ Get a sample from the dataset
+        """
+        sample = self.data[index][0]
+        label = self.data[index][1]
+        sample = np.reshape(sample, (1, sample.shape[0], sample.shape[1]))
+        return sample, label
+
+    def __len__(self):
+        return self.len

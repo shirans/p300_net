@@ -22,7 +22,9 @@ def train_model(model, n_epochs, train_loader, valid_loader, device, optimizer, 
             # move tensors to GPU if CUDA is available
             data = data.to(device)
             target = target.to(device)
-
+            # print("data shape:",data.shape)
+            # print("target shape:",target.shape)
+            # print(model)
             # TODO HOW TO REMOVE?
             shape = target.shape[0]
             target = target.reshape(shape, 1)
@@ -97,8 +99,13 @@ def train_model(model, n_epochs, train_loader, valid_loader, device, optimizer, 
 
 
 def build_model_path(model_name):
+    folder = build_folder_path(model_name)
+    output_path = os.path.join(folder, "model.pt")
+    return output_path
+
+
+def build_folder_path(model_name):
     folder = os.path.join("/Users/shiran.s/dev/p300_net/output/models/", model_name)
     if not os.path.exists(folder):
         os.mkdir(folder)
-    output_path = os.path.join(folder, "model.pt")
-    return output_path
+    return folder
