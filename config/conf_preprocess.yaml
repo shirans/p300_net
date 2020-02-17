@@ -1,2 +1,2 @@
 data_input: '/Users/shiran.s/dev/p300_net/data/IIb/'
-data_output: '/Users/shiran.s/dev/p300_net/output/processed_data/processed_test/'
+data_output: '/Users/shiran.s/dev/p300_net/output/processed_data/processed_latest/'

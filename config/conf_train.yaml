@@ -1,3 +1,3 @@
 n_epochs: 2000
-model_name: "model_conv"
-data_dir: '/Users/shiran.s/dev/p300_net/output/processed_data/processed_test/'
+model_name: "model_latest"
+data_dir: '/Users/shiran.s/dev/p300_net/output/processed_data/processed_latest/'

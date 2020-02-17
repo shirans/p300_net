@@ -7,7 +7,7 @@ import torch.optim as optim
 
 from preprocess.preprocess import build_dataloader, train_shapes
 from run_fc.eval_model import evaluate
-from run_fc.train_model import train_model, build_folder_path
+from run_fc.train_model import train_model
 
 # parameters
 data_dir, n_epochs, model_name = load_conf_train()
@@ -29,7 +29,7 @@ optimizer = optim.Adam(model.parameters(), lr=0.0005)
 
 valid_loss_min = np.Inf  # track change in validation loss
 start = time.time()
-
+print(model)
 train_model(model=model, n_epochs=n_epochs, train_loader=train_loader, valid_loader=valid_loader, device=device,
             optimizer=optimizer, criterion=criterion, model_name=model_name)
 

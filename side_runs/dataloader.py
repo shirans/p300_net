@@ -1,3 +1,5 @@
+from random import random, randint
+
 import torch
 from time import time
 import matplotlib.pyplot as plt
@@ -84,8 +86,8 @@ class MNIST(Dataset):
         # e.g., random crop, whitening
         if self.transform is not None:
             image = self.transform(image)
-        # return image and label
-        return image, label
+        # return torch.rand(1, 30,30), randint(0, 9)
+        return image , label
 
     def __len__(self):
         """
@@ -100,6 +102,10 @@ class Net(nn.Module):
 
         # Conv2d(in_channels, out_channels, kernel_size, stride=1, padding=0,
         #        dilation=1, groups=1, bias=True, padding_mode='zeros')
+        # in_channels = D, the depth of the input image, 3 for RGB and 1 for greyscale
+        # out channles= number of filters
+        # kernel size = K, size of the filter
+        # Size of the kernel layer: D=1, K=5 ==> 5X5X1 + 1 = 26
         self.conv1 = nn.Conv2d(1, 10, kernel_size=5)
         self.conv2 = nn.Conv2d(10, 20, kernel_size=5)
         self.conv2_drop = nn.Dropout2d()
@@ -116,19 +122,43 @@ class Net(nn.Module):
     def forward(self, x):
         # Note: the following two ways for max pooling / relu are equivalent.
         # 1) with torch.nn.functional:
-        x = F.relu(F.max_pool2d(self.conv1(x), 2))
+        print("x shape:", x.size())
+        conv_ = self.conv1(x)
+        # output volume:
+        # W = HighxWidth = 28x28 = 784
+        # F = K = 5
+        # P = 0
+        # S = 1
+        # ((W−F+2P)/S+1 = (784-5 + 2*0)/1 + 1 = 896
+        print("conve shape:", conv_.size())
+        max_pool = F.max_pool2d(conv_, 2)
+        print("max pool shape:",max_pool.size())
+        x = F.relu(max_pool)
+        print("rlue shape:",x.size())
+
         # 2) with torch.nn:
-        x = self.relu(self.max_pool(self.conv2_drop(self.conv2(x))))
+        self_conv_ = self.conv2(x)
+        print("conve shape:", self_conv_.size())
+        drop = self.conv2_drop(self_conv_)
+        print("drop shape:", drop.size())
+        x = self.relu(self.max_pool(drop))
+        print("x relu :", x.size())
         x = x.view(-1, 320)
+        print("x view:", x.size())
         x = F.relu(self.fc1(x))
+        print("x rele:", x.size())
         x = F.dropout(x, training=self.training)
+        print("x drop 2:", x.size())
         x = self.fc2(x)
-        return F.log_softmax(x, dim=1)
+        print("x fc:", x.size())
+        softmax = F.log_softmax(x, dim=1)
+        print("x fc:", softmax.size())
+        return softmax
 
 
 
 trainset = MNIST(
-    root='/Users/shiran.s/dev/p300_net/data/mnist_png/training',
+    root='/Users/shiran.s/dev/p300_net/data/mnist_png/training_small',
     preload=True, transform=transforms.ToTensor(),
 )
 
@@ -138,7 +168,7 @@ trainset_loader = DataLoader(trainset, batch_size=64, shuffle=True, num_workers=
 
 # Load the testset
 testset = MNIST(
-    root='/Users/shiran.s/dev/p300_net/data/mnist_png/testing',
+    root='/Users/shiran.s/dev/p300_net/data/mnist_png/testing_small',
     preload=True, transform=transforms.ToTensor(),
 )
 # Use the torch dataloader to iterate through the dataset
@@ -149,6 +179,10 @@ torch.manual_seed(123)
 device = torch.device("cuda" if use_cuda else "cpu")
 
 model = Net().to(device)
+params = list(model.parameters())
+for tensor in params:
+    print('Layer {}: {} elements'.format(tensor.name, torch.numel(tensor)))
+
 optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 
 

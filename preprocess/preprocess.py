@@ -173,21 +173,13 @@ def add_marker_choose_columns(channels_to_include, df):
     return df
 
 
-
 class P300_IIB(Dataset):
-    """
-    A customized data loader for MNIST.
-    """
-
     def __init__(self,
                  data):
         self.data = data
         self.len = len(data)
 
-    # probably the most important to customize.
     def __getitem__(self, index):
-        """ Get a sample from the dataset
-        """
         sample = self.data[index][0]
         label = self.data[index][1]
         sample = np.reshape(sample, (1, sample.shape[0], sample.shape[1]))

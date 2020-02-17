@@ -20,11 +20,10 @@ def train_model(model, n_epochs, train_loader, valid_loader, device, optimizer, 
         model.train()
         for data, target in train_loader:
             # move tensors to GPU if CUDA is available
-            data = data.to(device)
-            target = target.to(device)
-            # print("data shape:",data.shape)
-            # print("target shape:",target.shape)
-            # print(model)
+            data, target = data.to(device), target.to(device)
+
+            #print("data shape:", data.shape)
+            #print("target shape:", target.shape)
             # TODO HOW TO REMOVE?
             shape = target.shape[0]
             target = target.reshape(shape, 1)
