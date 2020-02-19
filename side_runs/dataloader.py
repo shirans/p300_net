@@ -131,6 +131,7 @@ class Net(nn.Module):
         # S = 1
         # ((W−F+2P)/S+1 = (784-5 + 2*0)/1 + 1 = 896
         print("conve shape:", conv_.size())
+        sum(p.numel() for p in self.conv1.parameters())
         max_pool = F.max_pool2d(conv_, 2)
         print("max pool shape:",max_pool.size())
         x = F.relu(max_pool)

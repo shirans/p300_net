@@ -25,8 +25,8 @@ def train_model(model, n_epochs, train_loader, valid_loader, device, optimizer, 
             #print("data shape:", data.shape)
             #print("target shape:", target.shape)
             # TODO HOW TO REMOVE?
-            shape = target.shape[0]
-            target = target.reshape(shape, 1)
+            # shape = target.shape[0]
+            # target = target.reshape(shape, 1)
             # clear the gradients of all optimized variables
             optimizer.zero_grad()
             # forward pass: compute predicted outputs by passing inputs to the model
@@ -44,10 +44,6 @@ def train_model(model, n_epochs, train_loader, valid_loader, device, optimizer, 
         model.eval()
         for data, target in valid_loader:
             # move tensors to GPU if CUDA is available
-
-            shape = target.shape[0]
-            target = target.reshape(shape, 1)
-
             data = data.to(device)
             target = target.to(device)
             # forward pass: compute predicted outputs by passing inputs to the model

@@ -19,8 +19,8 @@ def evaluate(loader, device, model, type):
         target = target.to(device)
 
         # TODO HOW TO REMOVE?
-        shape = target.shape[0]
-        target = target.reshape(shape, 1)
+        # shape = target.shape[0]
+        # target = target.reshape(shape, 1)
         # forward pass: compute predicted outputs by passing inputs to the model
         output = model(data)
         # calculate the batch loss

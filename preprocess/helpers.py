@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from nets.two_layers_net import TwoLayersNet
+import nets.conve_net
 
 import torch
 import yaml
@@ -30,8 +30,10 @@ _conditions['Target'] = [2]
 _event_ids = {'Non-Target': 1, 'Target': 2}
 
 
-def getModel(device):
-    model = TwoLayersNet().double()
+def get_model(device, network_class):
+    # model = TwoLayersNet().double()
+    print("netowrk used:", network_class)
+    model = getattr(nets.conve_net, network_class)().double()
     model.to(device)
     return model
 
@@ -56,7 +58,8 @@ def load_conf_train():
         return \
             conf['data_dir'], \
             conf['n_epochs'], \
-            conf['model_name']
+            conf['model_name'], \
+            conf['network']
 
 
 def load_conf_eval():
@@ -64,10 +67,5 @@ def load_conf_eval():
         conf = yaml.load(f)
         return \
             conf['data_dir'], \
-            conf['model_dir']
-
-
-def build_model(device):
-    model = TwoLayersNet().double()
-    model.to(device)
-    return model
+            conf['model_dir'], \
+            conf['network']

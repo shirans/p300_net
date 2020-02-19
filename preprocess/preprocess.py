@@ -140,11 +140,12 @@ def load_folder(type, path):
     batch_size = 64  # how many samples per batch to load
     num_workers = 0
 
-    # loader = P300_IIB(train_data)
+    train_data = P300_IIB(train_data)
     loader = torch.utils.data.DataLoader(train_data, batch_size=batch_size,
                                          sampler=sampler, num_workers=num_workers)
 
     return loader
+
 
 def build_dataloader(path):
     logger.info("loading data from path: {}".format(path))
@@ -182,7 +183,7 @@ class P300_IIB(Dataset):
     def __getitem__(self, index):
         sample = self.data[index][0]
         label = self.data[index][1]
-        sample = np.reshape(sample, (1, sample.shape[0], sample.shape[1]))
+        sample = sample.reshape( 1, sample.shape[0], sample.shape[1])
         return sample, label
 
     def __len__(self):
