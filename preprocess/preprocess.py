@@ -14,7 +14,8 @@ from scipy.io import loadmat
 from copy_helpers import load_muse_csv_as_raw__copy
 import logging
 
-from preprocess.helpers import replace_ch_names, _reject, _event_ids
+from plot_p300 import plot_p300, plot_inner
+from preprocess.helpers import replace_ch_names, _reject, event_ids, conditions
 
 logging.basicConfig(level=logging.DEBUG)
 logging.getLogger().setLevel(logging.INFO)
@@ -24,14 +25,6 @@ logger = logging.getLogger(__name__)
 
 # preprocess - load the data, split to train,test, set lables
 # Digitized to 240Mz, we want 600 MS to identify P300 at the half of it so 250 samples are 600 MS
-
-
-# def label_marker(row):
-#     if row[6] == 0:
-#         return 0  # no event
-#     if row[6] > 0 and row[7] == 1:
-#         return 2  # target
-#     return 1  # non target
 
 
 def label_marker(row):
@@ -46,7 +39,7 @@ def files_to_df(data_dir, indexes):
     if os.path.isfile(data_dir):
         logger.info("loading a single file from path: {}".format(data_dir))
         matrix = loadmat(data_dir)
-        return data_dict_to_df(matrix, indexes)
+        return [data_dict_to_df(matrix, indexes)]
     num_files = len(os.listdir(data_dir))
     logger.info("loading {} files from path: {}".format(num_files, data_dir))
     dfs = []
@@ -102,42 +95,47 @@ def unite_files_and_save(type, path, output_path, indexes):
     df.to_csv(path_or_buf=full_output_path, index=False)
 
 
-def load_folder(type, path):
-    full_path = os.path.join(path, type + '.csv')
-    num_columns_in_file = len(pd.read_csv(full_path).columns)
+def take_small_sample(X, labels, model_type):
+    if model_type == 'train':
+        X = X[:24, :]
+        labels = labels[:24]
+    return X, labels
 
-    # all columns are eeg except the last one which is the marker
-    ch_ind = list(range(0, num_columns_in_file))[:-1]
-    raw = load_muse_csv_as_raw__copy([full_path], sfreq=240, stim_ind=-1, replace_ch_names=replace_ch_names,
-                                     ch_ind=ch_ind)
 
-    raw.filter(1, 30, method='iir')
-    events = find_events(raw)
+def take_one_sample_per_class(X, labels, model_type):
+    if model_type == 'train':
+        X = np.array([X[0], X[2]])
+        labels = np.array([0, 1])
+    return X, labels
 
-    epochs = mne.Epochs(raw, events=events, event_id=_event_ids,
-                        tmin=-0.1, tmax=0.8, baseline=None,
-                        reject=_reject, preload=True,
-                        verbose=False, picks=ch_ind)
-    print('sample drop %: ', (1 - len(epochs.events) / len(events)) * 100)
-    labels = epochs.events[:, -1]
 
-    X = epochs.get_data()  # format is in (trials, channels, samples)
-    X = X.astype(np.double)
-    y = labels
-    num_train = len(X)
+def map_classes(label):
+    # map 1 -> 0, 2-->1
+    return label - 1
+
+
+map_classes_virtual = np.vectorize(map_classes)
+
+
+def load_folder(model_type, path, batch_size, sample_example):
+    x,labels = load_x_labels(model_type, path, sample_example)
+
+    # X, labels = take_one_sample(X, labels, model_type)
+    # X, labels = take_one_sample_per_class(X, labels, model_type)
+    # X, lables = take_small_sample(X, labels, model_type)
+    num_train = len(x)
     indices = list(range(num_train))
     np.random.shuffle(indices)
 
     sampler = SubsetRandomSampler(indices)
 
     train_data = []
-    for i in range(len(X)):
-        train_data.append([X[i], y[i]])
+    for i in range(len(x)):
+        train_data.append([x[i], labels[i]])
 
-    print("X shape: {}".format(X.shape))
-    print("Y shape: {}".format(y.shape))
+    print("X shape: {}".format(x.shape))
+    print("Y shape: {}".format(labels.shape))
 
-    batch_size = 64  # how many samples per batch to load
     num_workers = 0
 
     train_data = P300_IIB(train_data)
@@ -147,16 +145,59 @@ def load_folder(type, path):
     return loader
 
 
-def build_dataloader(path):
-    logger.info("loading data from path: {}".format(path))
-    train_loader = load_folder('train', path)
-    valid_loader = load_folder('valid', path)
+def load_x_labels(model_type, path, sample_example):
+    full_path = os.path.join(path, model_type + '.csv')
+    num_columns_in_file = len(pd.read_csv(full_path).columns)
+    # all columns are eeg except the last one which is the marker
+    ch_ind = list(range(0, num_columns_in_file))[:-1]
+    raw = load_muse_csv_as_raw__copy([full_path], sfreq=240, stim_ind=-1, replace_ch_names=replace_ch_names,
+                                     ch_ind=ch_ind)
+    raw.filter(1, 30, method='iir')
+    events = find_events(raw)
+    epochs = mne.Epochs(raw, events=events, event_id=event_ids,
+                        tmin=-0.1, tmax=0.8, baseline=None,
+                        reject=_reject, preload=True,
+                        verbose=False, picks=ch_ind)
+    print('sample drop for model type ', model_type, ' %', (1 - len(epochs.events) / len(events)) * 100)
+    # plot_inner(epochs,conditions,('in code mode type: ' + model_type),ylim=(-100, 100))
+    labels = epochs.events[:, -1]
+    labels = map_classes_virtual(labels)
+    # x = epochs.get_data()  # format is in (trials, channels, samples)
+    x = epochs.get_data() * 1e6
+    x = x.astype(np.double)
 
-    dataiter = iter(train_loader)
-    images, labels = dataiter.next()
-    print(type(images))
-    print(images.shape)
-    print(labels.shape)
+    if sample_example is not None:
+        print("samling data!!!!!!!!!")
+        x, labels = sample_example(x, labels, model_type)
+
+    print("labels:", np.bincount(labels), ' for:', model_type)
+    return x, labels
+
+
+# to test why it always false on class 2, create DS with only one item of class 2
+def take_one_sample(X, labels, model_type):
+    if model_type == 'train':
+        X = np.array([X[2]])
+        labels = np.array([0])
+    return X, labels
+
+
+def load_train_valid_matrix(path, sample):
+    x_train, y_train = load_x_labels('train', path, sample)
+    x_valid, y_valid = load_x_labels('valid', path, sample)
+    return x_train, y_train, x_valid, y_valid
+
+
+def build_dataloader(path, batch_size):
+    logger.info("loading data from path: {}".format(path))
+    train_loader = load_folder('train', path, batch_size, None)
+    valid_loader = load_folder('valid', path, batch_size, None)
+
+    # dataiter = iter(train_loader)
+    # images, labels = dataiter.next()
+    # print(type(images))
+    # print(images.shape)
+    # print(labels.shape)
 
     return train_loader, valid_loader
 
@@ -183,7 +224,7 @@ class P300_IIB(Dataset):
     def __getitem__(self, index):
         sample = self.data[index][0]
         label = self.data[index][1]
-        sample = sample.reshape( 1, sample.shape[0], sample.shape[1])
+        sample = sample.reshape(1, sample.shape[0], sample.shape[1])
         return sample, label
 
     def __len__(self):

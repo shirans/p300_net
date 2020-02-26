@@ -8,7 +8,7 @@ from preprocess.preprocess import build_dataloader
 from run_fc.eval_model import evaluate
 
 data_dir, model_dir, network = load_conf_eval()
-train_loader, valid_loader = build_dataloader(data_dir)
+train_loader, valid_loader = build_dataloader(data_dir, 64)
 
 device = get_device()
 model = get_model(device, network)
@@ -20,9 +20,9 @@ vgg = models.vgg16().to(device)
 
 # summary(vgg, (3, 224, 224))
 
-summary(model.type(torch.FloatTensor), (1, 6, 217))
 
 print("working with model:{}".format(model_dir))
 evaluate(train_loader, device, model, 'train')
 evaluate(valid_loader, device, model,'validation')
+summary(model.type(torch.FloatTensor), (1, 6, 217))
 print("Done!")

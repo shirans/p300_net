@@ -2,8 +2,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-
-NUM_CLASSES = 3
+NUM_CLASSES = 2
 
 
 def evaluate(loader, device, model, type):
@@ -15,12 +14,8 @@ def evaluate(loader, device, model, type):
 
     for data, target in loader:
         # move tensors to GPU if CUDA is available
-        data = data.to(device)
-        target = target.to(device)
+        data, target = data.to(device), target.to(device)
 
-        # TODO HOW TO REMOVE?
-        # shape = target.shape[0]
-        # target = target.reshape(shape, 1)
         # forward pass: compute predicted outputs by passing inputs to the model
         output = model(data)
         # calculate the batch loss
@@ -31,16 +26,23 @@ def evaluate(loader, device, model, type):
         _, pred = torch.max(output, 1)
         # compare predictions to true label
         correct_tensor = pred.eq(target.data.view_as(pred))
-        correct = np.squeeze(correct_tensor.numpy()) if device == "cpu" else np.squeeze(correct_tensor.cpu().numpy())
+        if len(correct_tensor) > 1:
+            correct = np.squeeze(correct_tensor.numpy()) if device == "cpu" else np.squeeze(
+                correct_tensor.cpu().numpy())
+        else:
+            correct = correct_tensor.numpy()
         # calculate test accuracy for each object class
         for i in range(target.size(0)):
             label = target.data[i]
+            if label > 1:
+                print(label)
             class_correct[label] += correct[i].item()
             class_total[label] += 1
 
     # average test loss
     test_loss = test_loss / len(loader.dataset)
     print("data for {}".format(type))
+    print("==========================")
     print('Loss: {:.6f}\n'.format(test_loss))
 
     for i in range(NUM_CLASSES):
@@ -49,7 +51,7 @@ def evaluate(loader, device, model, type):
                 i, 100 * class_correct[i] / class_total[i],
                 np.sum(class_correct[i]), np.sum(class_total[i])))
         else:
-            print('Accuracy of %3s: N/A (no training examples)' % (class_total[i]))
+            print('Accuracy of %3s: N/A (no training examples)' % i)
 
     print('\nTest Accuracy (Overall): %2d%% (%2d/%2d)' % (
         100. * np.sum(class_correct) / np.sum(class_total),

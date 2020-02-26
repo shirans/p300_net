@@ -1,8 +1,52 @@
 import os
+import warnings
 
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.metrics import accuracy_score, balanced_accuracy_score
+
+from preprocess.preprocess import load_train_valid_matrix, take_one_sample, take_one_sample_per_class
+
+warnings.filterwarnings('ignore')
+
+
+def train_svm(data_dit):
+    x_train, y_train, x_valid, y_valid = load_train_valid_matrix(data_dit, None)
+    x_train = x_train.reshape(x_train.shape[0], -1)
+    x_valid = x_valid.reshape(x_valid.shape[0], -1)
+
+    from sklearn.svm import SVC
+    clf = SVC(gamma='auto', kernel='linear')
+    clf.fit(x_train, y_train)
+    eval_read_maid_models(clf, x_valid, y_valid, 'svm', x_train, y_train)
+
+    from sklearn import tree
+    clf = tree.DecisionTreeClassifier()
+    clf = clf.fit(x_train, y_train)
+
+    tree.plot_tree(clf)
+    eval_read_maid_models(clf, x_valid, y_valid, 'tree', x_train, y_train)
+
+
+def eval_read_maid_models(clf, x_valid, y_valid, model_name, x_train, y_train):
+    eval_read_inner(clf,x_train,y_train,model_name,'train')
+    eval_read_inner(clf,x_valid,y_valid,model_name,'valud')
+
+
+def eval_read_inner(clf, x, y, model_name,data_type):
+    pred = clf.predict(x)
+    bincount = np.bincount(pred)
+    prediction_right = pred == y
+    correct = np.sum(prediction_right)
+    total = len(pred)
+    print("----------------------------------------------")
+    print("data_type: ",data_type)
+    print("bincount per class: ", bincount)
+    print("correct:", correct, "total: ", total)
+    print("score for ", model_name, ":", accuracy_score(y, pred))
+    print("balanced score for ", model_name, ":", balanced_accuracy_score(y, pred))
+    print("----------------------------------------------")
 
 
 def train_model(model, n_epochs, train_loader, valid_loader, device, optimizer, criterion, model_name):
@@ -22,8 +66,8 @@ def train_model(model, n_epochs, train_loader, valid_loader, device, optimizer, 
             # move tensors to GPU if CUDA is available
             data, target = data.to(device), target.to(device)
 
-            #print("data shape:", data.shape)
-            #print("target shape:", target.shape)
+            # print("data shape:", data.shape)
+            # print("target shape:", target.shape)
             # TODO HOW TO REMOVE?
             # shape = target.shape[0]
             # target = target.reshape(shape, 1)
@@ -32,6 +76,8 @@ def train_model(model, n_epochs, train_loader, valid_loader, device, optimizer, 
             # forward pass: compute predicted outputs by passing inputs to the model
             output = model(data)
             # calculate the batch loss
+            # print("tarhe sja[e",target.shape)
+            # print("output sja[e",output.shape)
             loss = criterion(output, target)
             # backward pass: compute gradient of the loss with respect to model parameters
             loss.backward()
@@ -42,6 +88,7 @@ def train_model(model, n_epochs, train_loader, valid_loader, device, optimizer, 
 
         # test + graphs
         model.eval()
+        model.train(False)
         for data, target in valid_loader:
             # move tensors to GPU if CUDA is available
             data = data.to(device)

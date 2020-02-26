@@ -1,8 +1,10 @@
 from collections import OrderedDict
-import nets.conve_net
+import nets.all_nets
 
 import torch
 import yaml
+
+from side_runs.dataloader import MnistNet
 
 replace_ch_names = {'1': "TP9"}
 
@@ -24,16 +26,18 @@ muse_cols_names = {
     'sig_44': 't10',
 }
 
-_conditions = OrderedDict()
-_conditions['Non-target'] = [1]
-_conditions['Target'] = [2]
-_event_ids = {'Non-Target': 1, 'Target': 2}
+conditions = OrderedDict()
+conditions['Non-target'] = [1]
+conditions['Target'] = [2]
+event_ids = {'Non-Target': 1, 'Target': 2}
 
 
 def get_model(device, network_class):
-    # model = TwoLayersNet().double()
-    print("netowrk used:", network_class)
-    model = getattr(nets.conve_net, network_class)().double()
+    # model =  nets.all_nets.TwoLayersNet().double()
+    # return model
+    # model = MnistNet().double()
+    print("network used:", network_class)
+    model = getattr(nets.all_nets, network_class)().double()
     model.to(device)
     return model
 

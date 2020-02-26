@@ -1,4 +1,5 @@
-n_epochs: 200
+n_epochs: 50
 model_name: "model_latest"
+#data_dir: '/Users/shiran.s/dev/p300_net/output/processed_data/processed_latest_small/'
 data_dir: '/Users/shiran.s/dev/p300_net/output/processed_data/processed_latest/'
-network: 'ConvNet'
+network: 'ConvolNet'
