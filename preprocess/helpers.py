@@ -56,6 +56,12 @@ def load_conf_preprocess():
             conf['data_output']
 
 
+def conf():
+    with open('config/conf_train.yaml', 'r', newline='') as f:
+        conf = yaml.load(f)
+        return conf
+
+
 def load_conf_train():
     with open('config/conf_train.yaml', 'r', newline='') as f:
         conf = yaml.load(f)
@@ -63,7 +69,8 @@ def load_conf_train():
             conf['data_dir'], \
             conf['n_epochs'], \
             conf['model_name'], \
-            conf['network']
+            conf['network'], \
+            conf['stop_condition']
 
 
 def load_conf_eval():

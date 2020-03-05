@@ -4,22 +4,22 @@ import warnings
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.metrics import accuracy_score, balanced_accuracy_score
+from sklearn.metrics import accuracy_score, balanced_accuracy_score, classification_report
 
 from preprocess.preprocess import load_train_valid_matrix, take_one_sample, take_one_sample_per_class
 
 warnings.filterwarnings('ignore')
 
 
-def train_svm(data_dit):
-    x_train, y_train, x_valid, y_valid = load_train_valid_matrix(data_dit, None)
+def train_svm(data_dit, mean_substract, metadata):
+    x_train, y_train, x_valid, y_valid = load_train_valid_matrix(data_dit, None, mean_substract)
     x_train = x_train.reshape(x_train.shape[0], -1)
     x_valid = x_valid.reshape(x_valid.shape[0], -1)
 
     from sklearn.svm import SVC
     clf = SVC(gamma='auto', kernel='linear')
     clf.fit(x_train, y_train)
-    eval_read_maid_models(clf, x_valid, y_valid, 'svm', x_train, y_train)
+    eval_read_maid_models(clf, x_valid, y_valid, 'svm', x_train, y_train, metadata)
 
     from sklearn import tree
     clf = tree.DecisionTreeClassifier()
@@ -29,31 +29,40 @@ def train_svm(data_dit):
     eval_read_maid_models(clf, x_valid, y_valid, 'tree', x_train, y_train)
 
 
-def eval_read_maid_models(clf, x_valid, y_valid, model_name, x_train, y_train):
-    eval_read_inner(clf,x_train,y_train,model_name,'train')
-    eval_read_inner(clf,x_valid,y_valid,model_name,'valud')
+def eval_read_maid_models(clf, x_valid, y_valid, model_name, x_train, y_train, metadata):
+    eval_read_inner(clf, x_train, y_train, model_name + 'train', metadata)
+    eval_read_inner(clf, x_valid, y_valid, model_name + 'test', metadata)
 
 
-def eval_read_inner(clf, x, y, model_name,data_type):
+def eval_read_inner(clf, x, y, model_name, metadata):
     pred = clf.predict(x)
-    bincount = np.bincount(pred)
+    metrics_success(model_name, y, pred, metadata)
+
+
+def metrics_success(model_name, y, pred, metadata):
     prediction_right = pred == y
     correct = np.sum(prediction_right)
     total = len(pred)
-    print("----------------------------------------------")
-    print("data_type: ",data_type)
-    print("bincount per class: ", bincount)
-    print("correct:", correct, "total: ", total)
-    print("score for ", model_name, ":", accuracy_score(y, pred))
-    print("balanced score for ", model_name, ":", balanced_accuracy_score(y, pred))
-    print("----------------------------------------------")
+    np.bincount(y)
+    metadata.append("-----------------success metrics: {}-----------------".format(model_name))
+    metadata.append("correct: {} total: {}".format(correct, total))
+    metadata.append("accuracy: {}".format( accuracy_score(y, pred)))
+    metadata.append("balanced accuracy: {}".format(balanced_accuracy_score(y, pred)))
+    metadata.append(classification_report(y, pred))
+    metadata.append("--------------------------------------------------")
 
 
-def train_model(model, n_epochs, train_loader, valid_loader, device, optimizer, criterion, model_name):
+def train_model(model, n_epochs, train_loader, valid_loader, device, optimizer, criterion, stop_condition, output_path,
+                metadata):
     valid_loss_min = np.Inf
     tLoss, vLoss = [], []
+    patience = stop_condition['patience']
+    epsilon = stop_condition['epsilon']
+    num_declaing_epochs = 0
+    num_epochs = 0
 
     for epoch in range(n_epochs):
+        num_epochs = num_epochs + 1
         # keep track of training and validation loss
         train_loss = 0.0
         valid_loss = 0.0
@@ -65,19 +74,11 @@ def train_model(model, n_epochs, train_loader, valid_loader, device, optimizer, 
         for data, target in train_loader:
             # move tensors to GPU if CUDA is available
             data, target = data.to(device), target.to(device)
-
-            # print("data shape:", data.shape)
-            # print("target shape:", target.shape)
-            # TODO HOW TO REMOVE?
-            # shape = target.shape[0]
-            # target = target.reshape(shape, 1)
             # clear the gradients of all optimized variables
             optimizer.zero_grad()
             # forward pass: compute predicted outputs by passing inputs to the model
             output = model(data)
             # calculate the batch loss
-            # print("tarhe sja[e",target.shape)
-            # print("output sja[e",output.shape)
             loss = criterion(output, target)
             # backward pass: compute gradient of the loss with respect to model parameters
             loss.backward()
@@ -112,16 +113,26 @@ def train_model(model, n_epochs, train_loader, valid_loader, device, optimizer, 
                 epoch, train_loss, valid_loss))
 
         # save model if validation loss has decreased
-        if valid_loss <= valid_loss_min:
+        if valid_loss <= valid_loss_min and abs(valid_loss_min - valid_loss) < epsilon:
+            print("loss decreased but improvement is small: {} - {} = {} > {}",
+                  valid_loss_min, valid_loss, valid_loss_min - valid_loss, epsilon)
+        if valid_loss <= valid_loss_min and abs(valid_loss_min - valid_loss) >= epsilon:
             print('Validation loss decreased ({:.6f} --> {:.6f}).  Saving model ...'.format(
                 valid_loss_min,
                 valid_loss))
-            output_path = build_model_path(model_name)
             torch.save(model.state_dict(), output_path)
             print('saved model to path:  {}'.format(output_path))
             valid_loss_min = valid_loss
+            num_declaing_epochs = 0
+            print("patience counter reset. loss:", valid_loss_min, "num epochs:", num_epochs)
+        else:
+            num_declaing_epochs = num_declaing_epochs + 1
+        if num_declaing_epochs > patience:
+            print("stopping after {} non improving epochs. num total epochs {}".format(num_declaing_epochs, num_epochs))
+            break
 
     # Plot the resulting loss over time
+    metadata.append("num epochs:".format(num_epochs))
     fig, ax1 = plt.subplots()
     color = 'tab:red'
     ax1.set_ylabel('Training Loss')
@@ -138,12 +149,13 @@ def train_model(model, n_epochs, train_loader, valid_loader, device, optimizer, 
 
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
     plt.show()
+    metadata.addfig(fig)
 
 
 def build_model_path(model_name):
     folder = build_folder_path(model_name)
     output_path = os.path.join(folder, "model.pt")
-    return output_path
+    return output_path, folder
 
 
 def build_folder_path(model_name):

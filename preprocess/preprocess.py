@@ -22,9 +22,10 @@ logging.getLogger().setLevel(logging.INFO)
 
 logger = logging.getLogger(__name__)
 
-
 # preprocess - load the data, split to train,test, set lables
 # Digitized to 240Mz, we want 600 MS to identify P300 at the half of it so 250 samples are 600 MS
+
+MEAN = None
 
 
 def label_marker(row):
@@ -117,9 +118,23 @@ def map_classes(label):
 map_classes_virtual = np.vectorize(map_classes)
 
 
-def load_folder(model_type, path, batch_size, sample_example):
-    x,labels = load_x_labels(model_type, path, sample_example)
+def calculateEntropy(dataSet):
+    number = len(dataSet)
+    labelCounts = {}
+    for label in dataSet:
+        if label not in labelCounts.keys():
+            labelCounts[label] = 0
+        labelCounts[label] += 1
+    entropy = 0
+    for i in labelCounts:
+        probability = float(labelCounts[i]) / number
+        entropy -= probability * np.math.log(probability, 2)
+    return entropy
 
+
+def load_folder(model_type, path, batch_size, sample_example, metadata, mean_substract):
+    x, labels = load_x_labels(model_type, path, sample_example, mean_substract)
+    print("entropy for {}:{}".format(model_type,calculateEntropy(labels)))
     # X, labels = take_one_sample(X, labels, model_type)
     # X, labels = take_one_sample_per_class(X, labels, model_type)
     # X, lables = take_small_sample(X, labels, model_type)
@@ -133,8 +148,8 @@ def load_folder(model_type, path, batch_size, sample_example):
     for i in range(len(x)):
         train_data.append([x[i], labels[i]])
 
-    print("X shape: {}".format(x.shape))
-    print("Y shape: {}".format(labels.shape))
+    metadata.append("X shape: {} for model type {}".format(x.shape, model_type))
+    metadata.append("Y shape: {} for model type {}".format(labels.shape, model_type))
 
     num_workers = 0
 
@@ -145,7 +160,7 @@ def load_folder(model_type, path, batch_size, sample_example):
     return loader
 
 
-def load_x_labels(model_type, path, sample_example):
+def load_x_labels(model_type, path, sample_example, mean_substract):
     full_path = os.path.join(path, model_type + '.csv')
     num_columns_in_file = len(pd.read_csv(full_path).columns)
     # all columns are eeg except the last one which is the marker
@@ -165,6 +180,13 @@ def load_x_labels(model_type, path, sample_example):
     # x = epochs.get_data()  # format is in (trials, channels, samples)
     x = epochs.get_data() * 1e6
     x = x.astype(np.double)
+    global MEAN
+    if mean_substract:
+        if model_type == 'train':
+            MEAN = np.mean(x, axis=0)
+        if MEAN is None:
+            raise ("error - mean was not computed")
+        x = x - MEAN
 
     if sample_example is not None:
         print("samling data!!!!!!!!!")
@@ -182,22 +204,21 @@ def take_one_sample(X, labels, model_type):
     return X, labels
 
 
-def load_train_valid_matrix(path, sample):
-    x_train, y_train = load_x_labels('train', path, sample)
-    x_valid, y_valid = load_x_labels('valid', path, sample)
+def load_train_valid_matrix(path, sample, mean_substract):
+    x_train, y_train = load_x_labels('train', path, sample, mean_substract)
+    x_valid, y_valid = load_x_labels('valid', path, sample, mean_substract)
     return x_train, y_train, x_valid, y_valid
 
 
-def build_dataloader(path, batch_size):
+def build_dataloader(path, batch_size, metadata, mean_substract):
     logger.info("loading data from path: {}".format(path))
-    train_loader = load_folder('train', path, batch_size, None)
-    valid_loader = load_folder('valid', path, batch_size, None)
+    train_loader = load_folder('train', path, batch_size, None, metadata, mean_substract)
+    valid_loader = load_folder('valid', path, batch_size, None, metadata, mean_substract)
 
-    # dataiter = iter(train_loader)
-    # images, labels = dataiter.next()
-    # print(type(images))
-    # print(images.shape)
-    # print(labels.shape)
+    images, labels = iter(train_loader).next()
+    print(type(images))
+    print(images.shape)
+    print(labels.shape)
 
     return train_loader, valid_loader
 
