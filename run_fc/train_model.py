@@ -4,52 +4,8 @@ import warnings
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.metrics import accuracy_score, balanced_accuracy_score, classification_report
-
-from preprocess.preprocess import load_train_valid_matrix, take_one_sample, take_one_sample_per_class
 
 warnings.filterwarnings('ignore')
-
-
-def train_svm(data_dit, mean_substract, metadata):
-    x_train, y_train, x_valid, y_valid = load_train_valid_matrix(data_dit, None, mean_substract)
-    x_train = x_train.reshape(x_train.shape[0], -1)
-    x_valid = x_valid.reshape(x_valid.shape[0], -1)
-
-    from sklearn.svm import SVC
-    clf = SVC(gamma='auto', kernel='linear')
-    clf.fit(x_train, y_train)
-    eval_read_maid_models(clf, x_valid, y_valid, 'svm', x_train, y_train, metadata)
-
-    from sklearn import tree
-    clf = tree.DecisionTreeClassifier()
-    clf = clf.fit(x_train, y_train)
-
-    tree.plot_tree(clf)
-    eval_read_maid_models(clf, x_valid, y_valid, 'tree', x_train, y_train)
-
-
-def eval_read_maid_models(clf, x_valid, y_valid, model_name, x_train, y_train, metadata):
-    eval_read_inner(clf, x_train, y_train, model_name + 'train', metadata)
-    eval_read_inner(clf, x_valid, y_valid, model_name + 'test', metadata)
-
-
-def eval_read_inner(clf, x, y, model_name, metadata):
-    pred = clf.predict(x)
-    metrics_success(model_name, y, pred, metadata)
-
-
-def metrics_success(model_name, y, pred, metadata):
-    prediction_right = pred == y
-    correct = np.sum(prediction_right)
-    total = len(pred)
-    np.bincount(y)
-    metadata.append("-----------------success metrics: {}-----------------".format(model_name))
-    metadata.append("correct: {} total: {}".format(correct, total))
-    metadata.append("accuracy: {}".format( accuracy_score(y, pred)))
-    metadata.append("balanced accuracy: {}".format(balanced_accuracy_score(y, pred)))
-    metadata.append(classification_report(y, pred))
-    metadata.append("--------------------------------------------------")
 
 
 def train_model(model, n_epochs, train_loader, valid_loader, device, optimizer, criterion, stop_condition, output_path,

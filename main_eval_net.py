@@ -9,7 +9,7 @@ from run_fc.metadata import Metadata
 
 data_dir, model_dir, network = load_conf_eval()
 metadata = Metadata(None)
-train_loader, valid_loader = build_dataloader(data_dir, 64,metadata, False)
+train_loader, valid_loader = build_dataloader(data_dir, 64, metadata, False)
 
 device = get_device()
 model = get_model(device, network)
@@ -23,7 +23,7 @@ vgg = models.vgg16().to(device)
 
 metadata = Metadata(None)
 print("working with model:{}".format(model_dir))
-evaluate(train_loader, device, model, 'train', metadata)
-evaluate(valid_loader, device, model, 'validation', metadata)
+evaluate(train_loader, device, model, metadata)
+evaluate(valid_loader, device, model, metadata)
 summary(model.type(torch.FloatTensor), (1, 6, 217))
 print("Done!")

@@ -1,9 +1,10 @@
 from collections import OrderedDict
-import nets.all_nets
-
+from nets import *
+from  nets.cnonvolnet import ConvolNet
+from  nets.twolayersnet import TwoLayersNet
+from  nets.cnonvolnet_spatial import ConvolNetSpatial
 import torch
 import yaml
-
 from side_runs.dataloader import MnistNet
 
 replace_ch_names = {'1': "TP9"}
@@ -36,8 +37,8 @@ def get_model(device, network_class):
     # model =  nets.all_nets.TwoLayersNet().double()
     # return model
     # model = MnistNet().double()
-    print("network used:", network_class)
-    model = getattr(nets.all_nets, network_class)().double()
+    class_obj =  globals()[network_class]()
+    model = class_obj.double()
     model.to(device)
     return model
 

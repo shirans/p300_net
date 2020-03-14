@@ -1,3 +1,4 @@
-model_dir: "/Users/shiran.s/dev/p300_net/output/models/model_nonquare_kernel/model.pt"
-data_dir: '/Users/shiran.s/dev/p300_net/output/processed_data/small/'
+model_dir: "/Users/shiran.s/dev/p300_net/output/models/model_nonquare_kernel_mean_centered/model.pt"
+#data_dir: '/Users/shiran.s/dev/p300_net/output/processed_data/processed_latest/'
+data_dir: '/Users/shiran.s/dev/p300_net/output/processed_data/small'
 network: 'ConvolNetSpatial'

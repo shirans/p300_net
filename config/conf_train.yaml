@@ -1,8 +1,8 @@
 n_epochs: 100
 model_name: "model_nonquare_kernel_mean_centered"
-#data_dir: '/Users/shiran.s/dev/p300_net/output/processed_data/small'
-data_dir: '/Users/shiran.s/dev/p300_net/output/processed_data/processed_latest/'
-#data_dir: '/Users/shiran.s/dev/p300_net/output/processed_data/dummy'
+data_dir: '/Users/shiran.s/dev/p300_net/output/processed_data/small'
+#data_dir: '/Users/shiran.s/dev/p300_net/output/processed_data_six_channels/'
+#network: 'TwoLayersNet'
 network: 'ConvolNetSpatial'
 stop_condition:
   patience: 20
