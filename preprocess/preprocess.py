@@ -64,9 +64,6 @@ def data_dict_to_df(x, indexes):
     StimulusType = x['StimulusType']
     StimulusCode = x['StimulusCode']
     trialnr = x['trialnr']
-
-    # choose spcific columns
-    # z_based = [42, 24, 29, 44, 45]
     signal = signal[:, indexes]
 
     sig = np.column_stack((samplenr, signal, StimulusCode, StimulusType, trialnr))

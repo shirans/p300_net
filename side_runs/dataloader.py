@@ -265,4 +265,4 @@ def test(model,testset_loader,device):
         test_loss, correct, len(testset_loader.dataset),
         100. * correct / len(testset_loader.dataset)))
 
-# main()
+main()

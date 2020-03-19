@@ -7,7 +7,6 @@ from scipy.io import loadmat
 from plot_p300 import plot_p300
 from preprocess.preprocess import data_dict_to_df, label_marker, files_to_df, add_marker_choose_columns
 from run_fc.metadata import Metadata
-from run_fc.train_model import train_svm
 
 warnings.filterwarnings('ignore')
 replace_ch_names = None
