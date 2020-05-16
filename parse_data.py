@@ -7,6 +7,7 @@ from scipy.io import loadmat
 from plot_p300 import plot_p300
 from preprocess.preprocess import data_dict_to_df, label_marker, files_to_df, add_marker_choose_columns
 from run_fc.metadata import Metadata
+from run_fc.ready_made_models import train_svm
 
 warnings.filterwarnings('ignore')
 replace_ch_names = None
@@ -43,4 +44,4 @@ def save_and_plot(df, title):
 # save_and_plot(df_old, 'old loading')
 save_and_plot(df_new, 'new loading')
 
-train_svm("/Users/shiran.s/dev/p300_net/output/train/",False, Metadata(None))
+train_svm("/Users/shiran.s/dev/p300_net/output/train/",False, Metadata(None),)

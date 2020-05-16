@@ -1,8 +1,9 @@
 from collections import OrderedDict
 from nets import *
-from  nets.cnonvolnet import ConvolNet
-from  nets.twolayersnet import TwoLayersNet
-from  nets.cnonvolnet_spatial import ConvolNetSpatial
+from nets.cnonvolnet import ConvolNet
+from nets.twolayersnet import TwoLayersNet
+from nets.cnonvolnet_spatial import ConvolNetSpatial
+from nets.lenet import LeNet
 import torch
 import yaml
 from side_runs.dataloader import MnistNet
@@ -33,11 +34,11 @@ conditions['Target'] = [2]
 event_ids = {'Non-Target': 1, 'Target': 2}
 
 
-def get_model(device, network_class):
+def get_model(device, network_class,num_classes):
     # model =  nets.all_nets.TwoLayersNet().double()
     # return model
     # model = MnistNet().double()
-    class_obj =  globals()[network_class]()
+    class_obj = globals()[network_class](num_classes)
     model = class_obj.double()
     model.to(device)
     return model

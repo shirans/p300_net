@@ -30,7 +30,7 @@ train_loader, valid_loader = build_dataloader(data_dir, batch_size, metadata, Fa
 # train_shapes(train_loader)
 # create a complete CNN
 device = get_device()
-model = get_model(device, network)
+model = get_model(device, network,2)
 # Get the device
 
 # specify loss function

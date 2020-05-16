@@ -1,9 +1,10 @@
 n_epochs: 100
-model_name: "model_nonquare_kernel_mean_centered"
+model_name: "lenet_p300"
 data_dir: '/Users/shiran.s/dev/p300_net/output/processed_data/small'
 #data_dir: '/Users/shiran.s/dev/p300_net/output/processed_data_six_channels/'
 #network: 'TwoLayersNet'
-network: 'ConvolNetSpatial'
+#network: 'ConvolNetSpatial'
+network: 'LeNet'
 stop_condition:
   patience: 20
   epsilon: 0.00001

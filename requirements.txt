@@ -1,1 +1,16 @@
-torch===1.0.1.post2
+torch===1.5.0
+torchvision==0.6.0
+pandas==1.0.3
+numpy==1.18.2
+# Pillow==6.2.2
+Pillow==7.1.2
+graphviz==0.13.2
+scikit-learn==0.22.2.post1
+mne==0.18.2
+# for reading .mat files kaggle
+h5py==2.10.0
+seaborn==0.10.1
+joypy==0.2.2
+torchsummary==1.5.1
+pyyaml==5.3.1
+

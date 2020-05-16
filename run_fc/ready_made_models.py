@@ -76,11 +76,6 @@ def eval_read_inner(clf, x, y, model_name, metadata):
     metrics_success(model_name, y, pred, metadata)
 
 
-# data_dir = '/Users/shiran.s/dev/p300_net/output/processed_data/small'
-data_dir = '/Users/shiran.s/dev/p300_net/output/processed_data/processed_latest/'
-train_all_models(data_dir, False, Metadata(None))
-
-
 def run_iris_example():
     from sklearn.tree import export_graphviz
     import pandas as pd
@@ -104,3 +99,14 @@ def run_iris_example():
         rounded=True)
     graph = graphviz.Source(dot_data)
     graph.render("file_1", view=True)
+
+
+def main():
+    # data_dir = '/Users/shiran.s/dev/p300_net/output/processed_data/small'
+    data_dir = '/Users/shiran.s/dev/p300_net/output/processed_data/processed_latest/'
+    train_all_models(data_dir, False, Metadata(None))
+
+
+if __name__ == "__main__":
+    main()
+

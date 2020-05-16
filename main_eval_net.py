@@ -2,6 +2,7 @@ import torch
 from torchsummary import summary
 from torchvision import models
 
+from nets.lenet import LeNet
 from preprocess.helpers import load_conf_eval, get_device, get_model
 from preprocess.preprocess import build_dataloader
 from run_fc.eval_model import evaluate
@@ -12,7 +13,10 @@ metadata = Metadata(None)
 train_loader, valid_loader = build_dataloader(data_dir, 64, metadata, False)
 
 device = get_device()
-model = get_model(device, network)
+model = get_model(device, network,2)
+model = LeNet(2).double()
+# model.init_last_later(10*1210)
+# model.forward(iter(train_loader).__next__()[0])
 model.load_state_dict(torch.load(model_dir))
 model.eval()
 

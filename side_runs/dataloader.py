@@ -20,80 +20,7 @@ import os.path as osp
 import numpy as np
 from PIL import Image
 
-
-class MNIST(Dataset):
-    """
-    A customized data loader for MNIST.
-    """
-
-    def __init__(self,
-                 root,
-                 transform=None,
-                 preload=False):
-        """ Intialize the MNIST dataset
-
-        Args:
-            - root: root directory of the dataset
-            - tranform: a custom tranform function
-            - preload: if preload the dataset into memory
-        """
-        self.images = None
-        self.labels = None
-        self.filenames = []
-        self.root = root
-        self.transform = transform
-
-        # read filenames
-        for i in range(10):
-            filenames = glob.glob(osp.join(root, str(i), '*.png'))
-            for fn in filenames:
-                self.filenames.append((fn, i))  # (filename, label) pair
-
-        # if preload dataset into memory
-        if preload:
-            self._preload()
-
-        self.len = len(self.filenames)
-
-    def _preload(self):
-        """
-        Preload dataset to memory
-        """
-        self.labels = []
-        self.images = []
-        for image_fn, label in self.filenames:
-            # load images
-            image = Image.open(image_fn)
-            self.images.append(image.copy())
-            # avoid too many opened files bug
-            image.close()
-            self.labels.append(label)
-
-    # probably the most important to customize.
-    def __getitem__(self, index):
-        """ Get a sample from the dataset
-        """
-        if self.images is not None:
-            # If dataset is preloaded
-            image = self.images[index]
-            label = self.labels[index]
-        else:
-            # If on-demand data loading
-            image_fn, label = self.filenames[index]
-            image = Image.open(image_fn)
-
-        # May use transform function to transform samples
-        # e.g., random crop, whitening
-        if self.transform is not None:
-            image = self.transform(image)
-        # return torch.rand(1, 30,30), randint(0, 9)
-        return image, label
-
-    def __len__(self):
-        """
-        Total number of samples in the dataset
-        """
-        return self.len
+from dataloaders.mnist import MNIST
 
 
 class MnistNet(nn.Module):
@@ -159,8 +86,8 @@ class MnistNet(nn.Module):
 
 def main():
     trainset = MNIST(
-        root='/Users/shiran.s/dev/p300_net/data/mnist_png/training',
-        # root='/Users/shiran.s/dev/p300_net/data/mnist_png/training_small',
+        root='/Users/shiran.s/dev/p300_net/data/mnist/training',
+        # root='/Users/shiran.s/dev/p300_net/data/mnist/training',
         preload=True, transform=transforms.ToTensor(),
     )
 
@@ -170,8 +97,8 @@ def main():
 
     # Load the testset
     testset = MNIST(
-        # root='/Users/shiran.s/dev/p300_net/data/mnist_png/testing_small',
-        root='/Users/shiran.s/dev/p300_net/data/mnist_png/testing',
+        # root='/Users/shiran.s/dev/p300_net/data/mnist/testing',
+        root='/Users/shiran.s/dev/p300_net/data/mnist/testing',
         preload=True, transform=transforms.ToTensor(),
     )
 
@@ -201,10 +128,11 @@ def main():
     # print labels
     print(' '.join('%5s' % labels[j] for j in range(16)))
     images.size()
-    train(5, model, trainset_loader, device,optimizer,testset_loader)  # train 5 epochs should get you to about 97% accuracy
+    train(5, model, trainset_loader, device, optimizer,
+          testset_loader)  # train 5 epochs should get you to about 97% accuracy
 
 
-def train(epoch, model, trainset_loader, device,optimizer,testset_loader, log_interval=100):
+def train(epoch, model, trainset_loader, device, optimizer, testset_loader, log_interval=100):
     model.train()  # set training mode
     iteration = 0
     for ep in range(epoch):
@@ -235,14 +163,12 @@ def train(epoch, model, trainset_loader, device,optimizer,testset_loader, log_in
                     ep, batch_idx * len(data), len(trainset_loader.dataset),
                         100. * batch_idx / len(trainset_loader), loss.item()))
             iteration += 1
-
-        print('end')
-        # end = time()
-        # print('{:.2f}s'.format(end - start))
-        test(model,testset_loader,device)  # evaluate at the end of epoch
+        end = time()
+        print('{:.2f}s'.format(end - start))
+        test(model, testset_loader, device)  # evaluate at the end of epoch
 
 
-def test(model,testset_loader,device):
+def test(model, testset_loader, device):
     model.eval()  # set evaluation mode
     test_loss = 0
     correct = 0
@@ -265,4 +191,5 @@ def test(model,testset_loader,device):
         test_loss, correct, len(testset_loader.dataset),
         100. * correct / len(testset_loader.dataset)))
 
-main()
+
+# main()
