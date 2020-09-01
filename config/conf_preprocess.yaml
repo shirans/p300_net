@@ -4,4 +4,4 @@
 
 # all data
 data_input: '/Users/shiran.s/dev/p300_net/data/IIb'
-data_output: '/Users/shiran.s/dev/p300_net/output/processed_data_six_channels/'
+data_output: '/Users/shiran.s/dev/p300_net/output/processed_data_six_channels_3/'

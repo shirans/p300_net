@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn import tree
 import graphviz
+import seaborn as sns
 
 warnings.filterwarnings('ignore')
 
@@ -20,13 +21,13 @@ def train_svm(x_train, y_train, x_valid, y_valid, metadata):
     eval_read_maid_models(clf, x_valid, y_valid, 'svm', x_train, y_train, metadata)
 
 
-def train_tree(x_train, y_train, x_valid, y_valid, metadata):
+def train_tree(x_train, y_train, x_valid, y_valid, metadata, class_names=None):
     clf = tree.DecisionTreeClassifier(criterion='entropy')
     clf = clf.fit(x_train, y_train)
 
     dot_data = tree.export_graphviz(clf, out_file=None,
                                     # feature_names=['tp1', '2', '3', '4'],
-                                    class_names=['common', 'rare_p300'],
+                                    class_names=class_names,
                                     filled=True, rounded=True,
                                     special_characters=True)
     graph = graphviz.Source(dot_data)
@@ -35,18 +36,32 @@ def train_tree(x_train, y_train, x_valid, y_valid, metadata):
     return clf.tree_.feature, clf.tree_.threshold, clf.tree_.value, clf
 
 
+def print_corr(x):
+    fig, ax = plt.subplots(figsize=(20, 20))
+    df = pd.DataFrame(x)
+    cols = df.columns[1:]
+    sns.heatmap(df[cols].corr(), annot=True, cmap='RdYlGn', ax=ax)
+    plt.show()
+    print(df.head(10))
+    print(df.mean())
+    print(df.head(10)[cols].corr())
+
+
 def train_all_models(data_dit, mean_substract, metadata):
     x_train, y_train, x_valid, y_valid = load_train_valid_matrix(data_dit, None, mean_substract)
     x_train_before, x_valid_before = x_train.reshape(x_train.shape[0], -1), x_valid.reshape(x_valid.shape[0], -1)
-    x_train_one_col = x_train[:, 5, :]
-    x_valid_one_col = x_valid[:, 5, :]
+    x_train_one_col = x_train[:, 4, :]
+    x_valid_one_col = x_valid[:, 4, :]
+
+    # print_corr(x_train_one_col)
+
     # print("compare before after:",x_train_before[0][0][0]==x_train[0][0])
     # print("compare before after:",x_train_before[0][0][1]==x_train[0][1])
     # print("compare before after:",x_train_before[0][1][0]==x_train[0][217])
 
     print("result on one columns")
-    train_tree(x_train_one_col, y_train, x_valid_one_col, y_valid, metadata)
-    # print("result on all columns")
+    train_tree(x_train_one_col, y_train, x_valid_one_col, y_valid, metadata, class_names=['common', 'rare_p300'])
+    print("result on all columns")
     # tree_feature, tree_threasholds, tree_values, clf = train_tree(x_train_before, y_train, x_valid_before, y_valid,
     #                                                               metadata)
     # thresh = tree_threasholds[0]
@@ -103,10 +118,9 @@ def run_iris_example():
 
 def main():
     # data_dir = '/Users/shiran.s/dev/p300_net/output/processed_data/small'
-    data_dir = '/Users/shiran.s/dev/p300_net/output/processed_data/processed_latest/'
+    data_dir = '/Users/shiran.s/dev/p300_net/output/processed_data_six_channels_3/'
     train_all_models(data_dir, False, Metadata(None))
 
 
 if __name__ == "__main__":
     main()
-
