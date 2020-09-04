@@ -50,8 +50,8 @@ def print_corr(x):
 def train_all_models(data_dit, mean_substract, metadata):
     x_train, y_train, x_valid, y_valid = load_train_valid_matrix(data_dit, None, mean_substract)
     x_train_before, x_valid_before = x_train.reshape(x_train.shape[0], -1), x_valid.reshape(x_valid.shape[0], -1)
-    x_train_one_col = x_train[:, 4, :]
-    x_valid_one_col = x_valid[:, 4, :]
+    # x_train_one_col = x_train[:, 4, :]
+    # x_valid_one_col = x_valid[:, 4, :]
 
     # print_corr(x_train_one_col)
 
@@ -59,11 +59,11 @@ def train_all_models(data_dit, mean_substract, metadata):
     # print("compare before after:",x_train_before[0][0][1]==x_train[0][1])
     # print("compare before after:",x_train_before[0][1][0]==x_train[0][217])
 
-    print("result on one columns")
-    train_tree(x_train_one_col, y_train, x_valid_one_col, y_valid, metadata, class_names=['common', 'rare_p300'])
+    # print("result on one columns")
+    # train_tree(x_train_one_col, y_train, x_valid_one_col, y_valid, metadata, class_names=['common', 'rare_p300'])
     print("result on all columns")
-    # tree_feature, tree_threasholds, tree_values, clf = train_tree(x_train_before, y_train, x_valid_before, y_valid,
-    #                                                               metadata)
+    tree_feature, tree_threasholds, tree_values, clf = train_tree(x_train_before, y_train, x_valid_before, y_valid,
+                                                                  metadata)
     # thresh = tree_threasholds[0]
     # index = tree_feature[0]
     # eval_tree_condition(index, thresh, x_valid_before, y_train, y_valid)

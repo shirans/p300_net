@@ -159,7 +159,7 @@ def load_folder(model_type, path, batch_size, sample_example, metadata, mean_sub
 
 def load_x_labels(model_type, path, sample_example, mean_substract):
     full_path = os.path.join(path, model_type + '.csv')
-    num_columns_in_file = len(pd.read_csv(full_path).columns)
+    num_columns_in_file = len(pd.read_csv(full_path, index_col=0).columns)
     # all columns are eeg except the last one which is the marker
     ch_ind = list(range(0, num_columns_in_file))[:-1]
     raw = load_muse_csv_as_raw__copy([full_path], sfreq=240, stim_ind=-1, replace_ch_names=replace_ch_names,
